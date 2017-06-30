@@ -2,9 +2,8 @@
 # coding=utf-8
 
 import os
+import sys
 import zipfile
-from sys import argv
-from time import localtime, strftime
 import datetime
 import time
 import urllib2
@@ -69,25 +68,14 @@ def unzip_file(zipfilename, unziptodir):
             outfile.close()
 
 
-def fetch_today(f):
-    return datetime.date.fromtimestamp(os.path.getctime(f)) == datetime.date.today()
-
-
-def fetch_all(f):
-    return True
-
 
 def main():
-    rootDir = os.path.abspath(os.path.join(my_path(), "LOG"))
-    if len(argv) > 1:
-        rootDir = argv[1]
-    files = []
-    rootDir = abspath(rootDir)
-    get_files(rootDir, files)
-    files = [f for f in files if fetch_today(f)]
-    out = strftime("%Y%m%d.%H.%M.%S", get_online_time())
-    out = join(rootDir, out + "_" + strftime("%Y%m%d%H%M%S", localtime()) + ".zip")
-    zip_files(rootDir, files, out)
+    if len(sys.argv) == 0:
+        return
+    if sys.argv[0] == "time":
+        print(str(get_online_time()))
+        return
+
 
 if __name__ == "__main__":
     main()
