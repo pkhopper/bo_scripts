@@ -70,11 +70,7 @@ def unzip_file(zipfilename, unziptodir):
 
 
 def main():
-    if len(sys.argv) == 0:
-        return
-    if sys.argv[0] == "time":
-        print(str(get_online_time()))
-        return
+    print(str(get_online_time()))
 
 
 if __name__ == "__main__":
