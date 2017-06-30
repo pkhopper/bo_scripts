@@ -1,0 +1,14 @@
+*.log
+.idea
+*.pyc
+*.ini
+*.json
+*.txt
+*.db3
+
+# Mac crap
+.DS_Store
+
+*.mp3
+*.lrc
+*.jpg
