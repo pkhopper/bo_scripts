@@ -13,9 +13,6 @@ import urllib2
 join, abspath, basename = os.path.join, os.path.abspath, os.path.basename
 
 
-def my_path():
-    return os.path.split(os.path.realpath(__file__))[0]
-
 def get_online_time():
     resp = urllib2.urlopen(urllib2.Request("http://www.baidu.com"))
     if resp.code == 200:
@@ -39,7 +36,7 @@ def zip_files(root, files, zipName):
     try:
         zf = zipfile.ZipFile(tmp_zip, "w", zipfile.zlib.DEFLATED)
         for f in files:
-            print(f)
+            print f
             zf.write(f, f[len(root):])
         zf.close()
         os.rename(tmp_zip, zipName)
@@ -53,7 +50,7 @@ def zip_files(root, files, zipName):
 
 def unzip_file(zipfilename, unziptodir):
     if not os.path.exists(unziptodir):
-        os.mkdir(unziptodir, int("0777"))
+        os.mkdir(unziptodir, 0777)
     zfobj = zipfile.ZipFile(zipfilename)
     for name in zfobj.namelist():
         name = name.replace('\\', '/')
@@ -63,28 +60,27 @@ def unzip_file(zipfilename, unziptodir):
         else:
             ext_filename = os.path.join(unziptodir, name)
             ext_dir = os.path.dirname(ext_filename)
-            if not os.path.exists(ext_dir): os.mkdir(ext_dir, int("0777"))
+            if not os.path.exists(ext_dir): os.mkdir(ext_dir, 0777)
             outfile = open(ext_filename, 'wb')
             outfile.write(zfobj.read(name))
             outfile.close()
 
 
-def fetch_today(f):
-    return datetime.date.fromtimestamp(os.path.getctime(f)) == datetime.date.today()
-
-
-def fetch_all(f):
-    return True
+def is_theday(f, n=0):
+    return  datetime.date.fromtimestamp(os.path.getctime(f)) == (datetime.date.today() + datetime.timedelta(n))
 
 
 def main():
-    rootDir = os.path.abspath(os.path.join(my_path(), "LOG"))
+    rootDir = "./"
+    delta = 0
     if len(argv) > 1:
         rootDir = argv[1]
+    if len(argv) > 2:
+        delta = int(argv[2])
     files = []
     rootDir = abspath(rootDir)
     get_files(rootDir, files)
-    files = [f for f in files if fetch_today(f)]
+    files = [f for f in files if is_theday(f, delta)]
     out = strftime("%Y%m%d.%H.%M.%S", get_online_time())
     out = join(rootDir, out + "_" + strftime("%Y%m%d%H%M%S", localtime()) + ".zip")
     zip_files(rootDir, files, out)
