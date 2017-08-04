@@ -7,6 +7,15 @@ import zipfile
 import datetime
 import time
 import urllib2
+import platform
+import signal
+import platform
+import threading
+import subprocess
+try:
+    reload(sys).setdefaultencoding("utr-8")
+except:
+    pass
 
 
 join, abspath, basename = os.path.join, os.path.abspath, os.path.basename
@@ -66,6 +75,57 @@ def unzip_file(zipfilename, unziptodir):
             outfile = open(ext_filename, 'wb')
             outfile.write(zfobj.read(name))
             outfile.close()
+
+
+def is_win32():
+    sysstr = platform.system()
+    return sysstr.lower() == "windows"
+
+
+def assure_path(p):
+    if os.path.exists(p):
+        return True
+    fullpath = os.path.abspath(p)
+    ptrace = []
+    while fullpath != "/" and not os.path.exists(fullpath):
+        ptrace.append(fullpath)
+        fullpath = os.path.dirname(fullpath)
+    ptrace.reverse()
+    for d in ptrace:
+        os.mkdir(d)
+    return os.path.exists(p)
+
+
+def loop_for_ever():
+    while True:
+        threading._sleep(1)
+
+
+class CommandLine(object):
+    def __init__(self, pwd, cmd, args):
+        self.cmd = [cmd] + args
+        self.proc = None
+        self.timeout = 10
+
+    def set_timeout(self, t):
+        self.timeout = t
+
+    def execute(self):
+        print(self.cmd, )
+        self.proc = subprocess.Popen(
+            self.cmd,
+            stdout=sys.stdout,
+            stderr=sys.stderr,
+            bufsize=0,
+        )
+        self.proc.wait()
+        if self.proc.returncode != 0:
+            raise Exception("[err] ret=%d, %s" % (self.proc.returncode, self.cmd))
+        return self.proc
+
+
+def newProc(pwd, cmd, args):
+    return CommandLine(pwd, cmd, args).execute()
 
 
 
