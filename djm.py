@@ -84,7 +84,7 @@ def client(cmds=None, cfg="start_server_sequence.txt", url=r"http://localhost:80
         print(ret, cmd, pwd)
         if ret != "ok":
             print(ret)
-            if cfg is not "start":
+            if cfg is "start":
                 return
         time.sleep(int(wait_sec))
     print("command sequence finished")
