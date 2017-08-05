@@ -102,8 +102,10 @@ def loop_for_ever():
 
 
 class CommandLine(object):
-    def __init__(self, pwd, cmd, args):
-        self.cmd = [cmd] + args
+    def __init__(self, pwd, cmd, args=None):
+        self.cmd = [cmd]
+        if args is not None:
+            self.cmd =  self.cmd + args
         self.proc = None
         self.timeout = 10
 

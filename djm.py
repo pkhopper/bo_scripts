@@ -6,6 +6,7 @@ import sys
 import SimpleXMLRPCServer
 import xmlrpclib
 import util
+import time
 
 try:
     reload(sys).setdefaultencoding("utr-8")
@@ -23,22 +24,16 @@ LOCAL_IP="127.0.0.1"
 LOCAL_PORT=1238
 REMOTE_PORT=1239
 
-# ip, port, cmd, params, sleepSeconds
-START_SERVER_SEQ = [
-    [LOCAL_IP, LOCAL_PORT, "ping"    , ["127.0.0.1"], 3],
-    [LOCAL_IP, LOCAL_PORT, "ping"    , ["127.0.0.1"], 3],
-    [LOCAL_IP, LOCAL_PORT, "ps"    , ["x", "a", "u"], 3],
-]
-
-STOP_SERVER_SEQ = [
-    [LOCAL_IP, LOCAL_PORT, "sayHello", ["param"], 3],
-    [LOCAL_IP, LOCAL_PORT, "sayWorld", ["param"], 3],
-    [LOCAL_IP, LOCAL_PORT, "StartCmd", ["param"], 3],
-    [LOCAL_IP, LOCAL_PORT, "StopCmd" , ["param"], 3],
-    [LOCAL_IP, LOCAL_PORT, "CheckCmd", ["param"], 3],
-]
-
 ####################################################################### 可编辑区域结束
+
+def parse_cfg(cfg="start_server_sequence.txt"):
+    with open(cfg, "r") as f:
+        lines = f.readlines()
+        lines = [line.strip() for line in lines]
+        lines = [line.split(',') for line in lines if not line.startswith('#')]
+        lines = [[l.strip() for l in line] for line in lines]
+        print(lines)
+        return lines
 
 
 class RPC:
@@ -46,11 +41,10 @@ class RPC:
         return "hello %s" % (p1)
     def sayWorld(self):
         return "world"
-    def StartCmd(self, cmd, params, work_dir):
-        print("StartCmd", cmd, params, work_dir)
+    def StartCmd(self, cmd, param, work_dir):
+        print("StartCmd", cmd, param, work_dir)
         try:
-            util.newProc(work_dir, cmd, params)
-
+            util.newProc(work_dir, cmd, param)
         except Exception as e:
             return e.message
         return "ok"
@@ -77,15 +71,21 @@ def server(local_ip="localhost", local_port=8088):
         raise e
 
 
-def client(cmds, url=r"http://localhost:8088"):
+def client(cmds, cfg="start_server_sequence.txt", url=r"http://localhost:8088"):
     print("start client ...")
     server = xmlrpclib.ServerProxy(url)
-    for ip, port, cmd, params, pwd in START_SERVER_SEQ:
-        ret = server.StartCmd(cmd, params, pwd)
-        print(ret, cmd, params, pwd)
+    lines = parse_cfg(cfg)
+    if lines is None:
+        print("failed on read config file, ", cfg)
+        return
+    for ip, port, cmd, pwd, wait_sec in lines:
+        cmd = cmd.split(' ')
+        ret = server.StartCmd(cmd[0], cmd[1:], pwd)
+        print(ret, cmd, pwd)
         if ret != "ok":
             print(ret)
             return
+        time.sleep(int(wait_sec))
     print("command sequence finished")
 
 
