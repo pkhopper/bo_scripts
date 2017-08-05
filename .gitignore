@@ -3,7 +3,6 @@
 *.pyc
 *.ini
 *.json
-*.txt
 *.db3
 
 # Mac crap
