@@ -71,7 +71,7 @@ def server(local_ip="localhost", local_port=8088):
         raise e
 
 
-def client(cmds, cfg="start_server_sequence.txt", url=r"http://localhost:8088"):
+def client(cmds=None, cfg="start_server_sequence.txt", url=r"http://localhost:8088"):
     print("start client ...")
     server = xmlrpclib.ServerProxy(url)
     lines = parse_cfg(cfg)
@@ -94,14 +94,7 @@ def main():
     if sys.argv[1] == "server":
         server()
     else:
-        cmds = [
-            "server.sayHello",
-            "server.sayWorld",
-            "server.StartCmd",
-            "server.StopCmd",
-            "server.CheckCmd",
-        ]
-        client(cmds=cmds)
+        client(cfg=sys.argv[1])
 
 
 if __name__ == "__main__":
