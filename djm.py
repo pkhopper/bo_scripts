@@ -32,19 +32,22 @@ def parse_cfg(cfg):
         lines = [line.strip() for line in lines]
         lines = [line.split(',') for line in lines if not line.startswith('#')]
         lines = [[l.strip() for l in line] for line in lines]
-        # print(lines)
         return lines
 
 
 class RPC:
     def StartCmd(self, cmd, param, cwd):
         print("StartCmd", cmd, param, cwd)
+        ret = "ok"
         cmdline = util.CommandLine(cwd, cmd, param)
         try:
             cmdline.execute()
         except Exception as e:
-            return "failed", cmdline.proc.stdout.read()
-        return "ok", ""
+            ret = e.errno
+        if cmdline.proc:
+            return ret, cmdline.proc.stdout.read(), cmdline.proc.stderr.read()
+        else:
+            return ret, "", ""
 
 
 
@@ -72,23 +75,39 @@ def client(cfg=None, url=r"http://localhost:8088"):
     for ip, port, cmd, cwd, wait_sec in lines:
         cmd = cmd.split(' ')
         ret, stdoutmsg, stderrmsg = server.StartCmd(cmd[0], cmd[1:], cwd)
-        # print(ret, cmd, cwd)
+        print(ret, stdoutmsg, stderrmsg)
         if ret != "ok":
-            print(stderrmsg)
             if cfg is "start":
                 return
-        else:
-            print(stdoutmsg)
         time.sleep(int(wait_sec))
     print("command sequence finished")
+
+
+def dbg_interface(url=r"http://localhost:8088"):
+    print("start client ...")
+    server = xmlrpclib.ServerProxy(url)
+    ip, port, cmd, cwd, wait_sec = "", "", "", "", 1
+    while True:
+        print("==========================")
+        cmd = raw_input()
+        cmd = cmd.split(' ')
+        ret, stdoutmsg, stderrmsg = server.StartCmd(cmd[0], cmd[1:], cwd)
+        if ret != "ok":
+            print(stderrmsg)
+        else:
+            print(stdoutmsg)
+        print("==========================")
+
 
 
 def main():
     print(sys.argv)
     if sys.argv[1] == "server":
         server()
+    elif sys.argv[1] == "client":
+        client(cfg=sys.argv[2])
     else:
-        client(cfg=sys.argv[1])
+        dbg_interface()
 
 
 if __name__ == "__main__":

@@ -106,7 +106,7 @@ class CommandLine(object):
         self.cmd = [cmd]
         if args is not None:
             self.cmd =  self.cmd + args
-        self.cwd = cwd
+        self.cwd = cwd if cwd is not '' else None
         self.proc = None
         self.timeout = 10
 
@@ -114,11 +114,11 @@ class CommandLine(object):
         self.timeout = t
 
     def execute(self):
-        print(self.cmd, )
         self.proc = subprocess.Popen(
             self.cmd,
-            stdout=sys.stdout,
-            stderr=sys.stderr,
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
             bufsize=0,
             cwd=self.cwd
         )
