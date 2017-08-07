@@ -37,22 +37,12 @@ def parse_cfg(cfg="start_server_sequence.txt"):
 
 
 class RPC:
-    def sayHello(self, p1):
-        return "hello %s" % (p1)
-    def sayWorld(self):
-        return "world"
-    def StartCmd(self, cmd, param, work_dir):
-        print("StartCmd", cmd, param, work_dir)
+    def StartCmd(self, cmd, param, cwd):
+        print("StartCmd", cmd, param, cwd)
         try:
-            util.newProc(work_dir, cmd, param)
+            util.newProc(cwd, cmd, param)
         except Exception as e:
             return e.message
-        return "ok"
-    def StopCmd(self, cmd):
-        print("StopCmd", cmd)
-        return "ok"
-    def CheckCmd(self, cmd):
-        print("CheckCmd", cmd)
         return "ok"
 
 
@@ -61,7 +51,7 @@ def server(local_ip="localhost", local_port=8088):
     server = SimpleXMLRPCServer.SimpleXMLRPCServer((local_ip, local_port))
     try:
         print("start server ...")
-        print("Listening on port 8088")
+        print("Listening on port %s:%d" % (local_ip, local_port))
         rpc = RPC()
         server.register_instance(rpc)
         server.serve_forever()
@@ -71,17 +61,17 @@ def server(local_ip="localhost", local_port=8088):
         raise e
 
 
-def client(cmds=None, cfg="start_server_sequence.txt", url=r"http://localhost:8088"):
+def client(cmds=None, cfg=None, url=r"http://localhost:8088"):
     print("start client ...")
     server = xmlrpclib.ServerProxy(url)
     lines = parse_cfg(cfg)
     if lines is None:
         print("failed on read config file, ", cfg)
         return
-    for ip, port, cmd, pwd, wait_sec in lines:
+    for ip, port, cmd, cwd, wait_sec in lines:
         cmd = cmd.split(' ')
-        ret = server.StartCmd(cmd[0], cmd[1:], pwd)
-        print(ret, cmd, pwd)
+        ret = server.StartCmd(cmd[0], cmd[1:], cwd)
+        print(ret, cmd, cwd)
         if ret != "ok":
             print(ret)
             if cfg is "start":

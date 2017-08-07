@@ -102,10 +102,11 @@ def loop_for_ever():
 
 
 class CommandLine(object):
-    def __init__(self, pwd, cmd, args=None):
+    def __init__(self, cwd, cmd, args=None):
         self.cmd = [cmd]
         if args is not None:
             self.cmd =  self.cmd + args
+        self.cwd = cwd
         self.proc = None
         self.timeout = 10
 
@@ -119,6 +120,7 @@ class CommandLine(object):
             stdout=sys.stdout,
             stderr=sys.stderr,
             bufsize=0,
+            cwd=self.cwd
         )
         self.proc.wait()
         if self.proc.returncode != 0:
@@ -126,8 +128,8 @@ class CommandLine(object):
         return self.proc
 
 
-def newProc(pwd, cmd, args):
-    return CommandLine(pwd, cmd, args).execute()
+def newProc(cwd, cmd, args):
+    return CommandLine(cwd, cmd, args).execute()
 
 
 
