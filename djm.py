@@ -43,7 +43,7 @@ class RPC:
         try:
             proc.execute()
         except Exception as e:
-            return "failed", e.message
+            return "failed", proc.stdout.read()
         return "ok", ""
 
 
