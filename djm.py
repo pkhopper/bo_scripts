@@ -73,15 +73,18 @@ def client(cfg=None, url=r"http://localhost:8088"):
     if lines is None:
         print("failed on read config file, ", cfg)
         return
+    rst_seq = []
     for ip, port, cmd, cwd, wait_sec in lines:
         cmd = cmd.split(' ')
         ret, raw_cmd, stdoutmsg, stderrmsg = server.StartCmd(cmd[0], cmd[1:], cwd)
         print(ret, raw_cmd, stdoutmsg, stderrmsg)
+        rst_seq.append([ret, raw_cmd])
         if ret != "ok":
             if cfg is "start":
                 return
         time.sleep(int(wait_sec))
     print("command sequence finished")
+    print(rst_seq)
 
 
 def dbg_interface(url=r"http://localhost:8088"):
