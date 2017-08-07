@@ -39,11 +39,11 @@ def parse_cfg(cfg):
 class RPC:
     def StartCmd(self, cmd, param, cwd):
         print("StartCmd", cmd, param, cwd)
-        proc = util.CommandLine(cwd, cmd, param)
+        cmdline = util.CommandLine(cwd, cmd, param)
         try:
-            proc.execute()
+            cmdline.execute()
         except Exception as e:
-            return "failed", proc.stdout.read()
+            return "failed", cmdline.proc.stdout.read()
         return "ok", ""
 
 
