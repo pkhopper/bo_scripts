@@ -46,9 +46,9 @@ class RPC:
             ret = e.message
         if cmdline.proc:
             o1, o2 = cmdline.proc.stdout.read(), cmdline.proc.stderr.read()
-            return ret, o1, o2
+            return ret, cmdline.cmd, o1, o2
         else:
-            return ret, "", ""
+            return ret, cmdline.cmd, "", ""
 
 
 
