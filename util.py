@@ -13,7 +13,7 @@ import platform
 import threading
 import subprocess
 try:
-    reload(sys).setdefaultencoding("utr-8")
+    reload(sys).setdefaultencoding("utf-8")
 except:
     pass
 
@@ -116,7 +116,7 @@ class CommandLine(object):
     def execute(self):
         self.proc = subprocess.Popen(
             self.cmd,
-            shell=True,
+            # shell=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             bufsize=0,
