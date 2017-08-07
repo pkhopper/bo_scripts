@@ -71,12 +71,14 @@ def client(cfg=None, url=r"http://localhost:8088"):
         return
     for ip, port, cmd, cwd, wait_sec in lines:
         cmd = cmd.split(' ')
-        ret = server.StartCmd(cmd[0], cmd[1:], cwd)
-        print(ret, cmd, cwd)
+        ret, stdoutmsg, stderrmsg = server.StartCmd(cmd[0], cmd[1:], cwd)
+        # print(ret, cmd, cwd)
         if ret != "ok":
-            print(ret)
+            print(stderrmsg)
             if cfg is "start":
                 return
+        else:
+            print(stdoutmsg)
         time.sleep(int(wait_sec))
     print("command sequence finished")
 
