@@ -75,8 +75,8 @@ def client(cfg=None, url=r"http://localhost:8088"):
         return
     for ip, port, cmd, cwd, wait_sec in lines:
         cmd = cmd.split(' ')
-        ret, stdoutmsg, stderrmsg = server.StartCmd(cmd[0], cmd[1:], cwd)
-        print(ret, stdoutmsg, stderrmsg)
+        ret, raw_cmd, stdoutmsg, stderrmsg = server.StartCmd(cmd[0], cmd[1:], cwd)
+        print(ret, raw_cmd, stdoutmsg, stderrmsg)
         if ret != "ok":
             if cfg is "start":
                 return
@@ -92,7 +92,7 @@ def dbg_interface(url=r"http://localhost:8088"):
         print("==========================")
         cmd = raw_input()
         cmd = cmd.split(' ')
-        ret, stdoutmsg, stderrmsg = server.StartCmd(cmd[0], cmd[1:], cwd)
+        ret, raw_cmd, stdoutmsg, stderrmsg = server.StartCmd(cmd[0], cmd[1:], cwd)
         if ret != "ok":
             print(stderrmsg)
         else:
