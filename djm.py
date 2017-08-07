@@ -9,7 +9,7 @@ import util
 import time
 
 try:
-    reload(sys).setdefaultencoding("utr-8")
+    reload(sys).setdefaultencoding("utf-8")
 except:
     pass
 
@@ -43,9 +43,10 @@ class RPC:
         try:
             cmdline.execute()
         except Exception as e:
-            ret = e.errno
+            ret = e.message
         if cmdline.proc:
-            return ret, cmdline.proc.stdout.read(), cmdline.proc.stderr.read()
+            o1, o2 = cmdline.proc.stdout.read(), cmdline.proc.stderr.read()
+            return ret, o1, o2
         else:
             return ret, "", ""
 
@@ -101,6 +102,7 @@ def dbg_interface(url=r"http://localhost:8088"):
 
 
 def main():
+
     print(sys.argv)
     if sys.argv[1] == "server":
         server()
