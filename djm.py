@@ -84,7 +84,8 @@ def client(cfg=None, url=r"http://localhost:8088"):
                 return
         time.sleep(int(wait_sec))
     print("command sequence finished")
-    print(rst_seq)
+    for rst in rst_seq:
+        print(rst)
 
 
 def dbg_interface(url=r"http://localhost:8088"):
