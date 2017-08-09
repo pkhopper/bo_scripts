@@ -13,3 +13,15 @@
 *.jpg
 
 pack
+gss
+gms
+log
+pnldb
+sohu
+srs
+caafs
+cls
+common
+init_server.py
+start
+stop
