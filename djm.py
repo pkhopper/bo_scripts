@@ -7,6 +7,7 @@ import SimpleXMLRPCServer
 import xmlrpclib
 import util
 import time
+import base64
 
 try:
     reload(sys).setdefaultencoding("utf-8")
@@ -16,7 +17,7 @@ except:
 join, abspath, basename = os.path.join, os.path.abspath, os.path.basename
 
 
-####################################################################### 可编辑区域开始
+####################################################################### 鍙紪杈戝尯鍩熷紑濮
 
 BO_ROOT="~/bo"
 # LS_ROOT="~/bo/linuxserver"
@@ -24,12 +25,13 @@ LOCAL_IP="127.0.0.1"
 LOCAL_PORT=1238
 REMOTE_PORT=1239
 
-####################################################################### 可编辑区域结束
+####################################################################### 鍙紪杈戝尯鍩熺粨鏉
 
 def parse_cfg(cfg):
     with open(cfg, "r") as f:
         lines = f.readlines()
         lines = [line.strip() for line in lines]
+        lines = [line for line in lines if len(line) > 0]
         lines = [line.split(',') for line in lines if not line.startswith('#')]
         lines = [[l.strip() for l in line] for line in lines]
         return lines
@@ -44,15 +46,15 @@ class RPC:
             cmdline.execute()
         except Exception as e:
             ret = e.message
-        if cmdline.proc:
-            o1, o2 = cmdline.proc.stdout.read(), cmdline.proc.stderr.read()
-            return ret, cmdline.cmd, o1, o2
-        else:
-            return ret, cmdline.cmd, "", ""
+            ret = "failed"
+        o1, o2 = "*", "*"
+        # if cmdline.proc:
+        #     o1, o2 = cmdline.proc.stdout.read(), cmdline.proc.stderr.read()
+        # o1, o2 = base64.b64encode(o1), base64.b64encode(o2)
+        return ret, cmdline.cmd, o1, o2
 
 
-
-def server(local_ip="localhost", local_port=8088):
+def server(local_ip="0.0.0.0", local_port=1239):
     server = SimpleXMLRPCServer.SimpleXMLRPCServer((local_ip, local_port))
     try:
         print("start server ...")
@@ -66,17 +68,33 @@ def server(local_ip="localhost", local_port=8088):
         raise e
 
 
-def client(cfg=None, url=r"http://localhost:8088"):
+class RemoteServers:
+    def __init__(self):
+        self.servers = {}
+
+    def get(self, ip, port):
+        url = r"http://%s:%s" % (ip, port)
+        if url in self.servers:
+            return self.servers[url]
+        else:
+            self.servers[url] = xmlrpclib.ServerProxy(url)
+            return self.servers[url]
+
+
+def client(cfg=None):
     print("start client ...")
-    server = xmlrpclib.ServerProxy(url)
     lines = parse_cfg(cfg)
     if lines is None:
         print("failed on read config file, ", cfg)
         return
     rst_seq = []
+    servers = RemoteServers()
     for ip, port, cmd, cwd, wait_sec in lines:
+        server = servers.get(ip, port)
         cmd = cmd.split(' ')
         ret, raw_cmd, stdoutmsg, stderrmsg = server.StartCmd(cmd[0], cmd[1:], cwd)
+        # stdoutmsg = base64.b64decode(stdoutmsg)
+        # stderrmsg = base64.b64decode(stderrmsg)
         print(ret, raw_cmd, stdoutmsg, stderrmsg)
         rst_seq.append([ret, raw_cmd])
         if ret != "ok":
@@ -88,7 +106,7 @@ def client(cfg=None, url=r"http://localhost:8088"):
         print(rst)
 
 
-def dbg_interface(url=r"http://localhost:8088"):
+def dbg_interface(url=r"http://localhost:1239"):
     print("start client ...")
     server = xmlrpclib.ServerProxy(url)
     ip, port, cmd, cwd, wait_sec = "", "", "", "", 1
