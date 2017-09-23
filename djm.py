@@ -6,7 +6,6 @@ import sys
 import SimpleXMLRPCServer
 import xmlrpclib
 import util
-import time
 import base64
 
 try:
@@ -17,55 +16,67 @@ except:
 join, abspath, basename = os.path.join, os.path.abspath, os.path.basename
 
 
-####################################################################### 鍙紪杈戝尯鍩熷紑濮
-
-BO_ROOT="~/bo"
-# LS_ROOT="~/bo/linuxserver"
-LOCAL_IP="127.0.0.1"
-LOCAL_PORT=1238
-REMOTE_PORT=1239
-
-####################################################################### 鍙紪杈戝尯鍩熺粨鏉
-
-def parse_cfg(cfg):
-    with open(cfg, "r") as f:
-        lines = f.readlines()
-        lines = [line.strip() for line in lines]
-        lines = [line for line in lines if len(line) > 0]
-        lines = [line.split(',') for line in lines if not line.startswith('#')]
-        lines = [[l.strip() for l in line] for line in lines]
-        return lines
-
 
 class RPC:
     def StartCmd(self, cmd, param, cwd):
+        cmd = util.regulate_win32_path(cmd)
+        cwd = util.regulate_win32_path(cwd)
         print("StartCmd", cmd, param, cwd)
-        ret = "ok"
         cmdline = util.CommandLine(cwd, cmd, param)
         try:
-            cmdline.execute()
+            ret, proc = cmdline.execute()
+            o1, o2 = "", ""
+            for line in proc.stdout.readlines():
+                o1 += line + '\n'
+            for line in proc.stderr.readlines():
+                o2 += line + '\n'
+            o1 = base64.b64encode(o1)
+            o2 = base64.b64encode(o2)
+            if ret == 0:
+                return "ok", cmdline.cmd, o1, o2
+            else:
+                return "failed", cmdline.cmd, o1, o2
         except Exception as e:
-            ret = e.message
+            err = "RPC.StartCmd, exception: %s" % (e)
+            sys.stderr.writelines([err])
+            return "failed", cmdline.cmd, e.message, err
+
+    def ChkProc(self, cmd):
+        cmd = util.regulate_win32_path(cmd)
+        print("ChkProc", cmd)
+        try:
+            found = util.get_proc_by_name(cmd)
+        except Exception as e:
+            print e.message
+            found = None
+        o1, o2 = "*", "*"
+        return found, cmd, o1, o2
+
+
+    def PS(self):
+        print("ChkProc")
+        ret = "ok"
+        try:
+            ret = os.popen("ps x")
+        except Exception as e:
+            print e.message
             ret = "failed"
         o1, o2 = "*", "*"
-        # if cmdline.proc:
-        #     o1, o2 = cmdline.proc.stdout.read(), cmdline.proc.stderr.read()
-        # o1, o2 = base64.b64encode(o1), base64.b64encode(o2)
-        return ret, cmdline.cmd, o1, o2
+        return ret, "ps", o1, o2
 
 
-def server(local_ip="0.0.0.0", local_port=1239):
+def serve_forever(local_ip="0.0.0.0", local_port=1238):
     server = SimpleXMLRPCServer.SimpleXMLRPCServer((local_ip, local_port))
     try:
         print("start server ...")
-        print("Listening on port %s:%d" % (local_ip, local_port))
+        print("djm server listen at %s:%d" % (local_ip, local_port))
         rpc = RPC()
         server.register_instance(rpc)
         server.serve_forever()
     except Exception as e:
         server.server_close()
-        print("stop server ...")
         raise e
+    print("stop server ...")
 
 
 class RemoteServers:
@@ -81,64 +92,11 @@ class RemoteServers:
             return self.servers[url]
 
 
-def client(cfg=None):
-    print("start client ...")
-    lines = parse_cfg(cfg)
-    if lines is None:
-        print("failed on read config file, ", cfg)
-        return
-    rst_seq = []
-    servers = RemoteServers()
-    for ip, port, cmd, cwd, wait_sec in lines:
-        server = servers.get(ip, port)
-        cmd = cmd.split(' ')
-        ret, raw_cmd, stdoutmsg, stderrmsg = server.StartCmd(cmd[0], cmd[1:], cwd)
-        # stdoutmsg = base64.b64decode(stdoutmsg)
-        # stderrmsg = base64.b64decode(stderrmsg)
-        print(ret, raw_cmd, stdoutmsg, stderrmsg)
-        rst_seq.append([ret, raw_cmd])
-        if ret != "ok":
-            if cfg is "start":
-                return
-        time.sleep(int(wait_sec))
-    print("command sequence finished")
-    for rst in rst_seq:
-        print(rst)
-
-
-def dbg_interface(url=r"http://localhost:1239"):
-    print("start client ...")
-    server = xmlrpclib.ServerProxy(url)
-    ip, port, cmd, cwd, wait_sec = "", "", "", "", 1
-    while True:
-        print("==========================")
-        cmd = raw_input()
-        cmd = cmd.split(' ')
-        ret, raw_cmd, stdoutmsg, stderrmsg = server.StartCmd(cmd[0], cmd[1:], cwd)
-        if ret != "ok":
-            print(stderrmsg)
-        else:
-            print(stdoutmsg)
-        print("==========================")
-
-
-
-def main():
-
-    print(sys.argv)
-    if sys.argv[1] == "server":
-        server()
-    elif sys.argv[1] == "client":
-        client(cfg=sys.argv[2])
-    else:
-        dbg_interface()
-
-
 if __name__ == "__main__":
-    try:
-        print("start .....")
-        main ()
-    except KeyboardInterrupt as e:
-        print('stop by user')
-    print("stop .....")
-    exit (0)
+    ip = "0.0.0.0"
+    port = 1238
+    if len(sys.argv) > 1:
+        ip = sys.argv[1]
+    if len(sys.argv) > 2:
+        port = sys.argv[2]
+    serve_forever(ip, port)
