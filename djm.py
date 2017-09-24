@@ -54,7 +54,7 @@ class RPC:
             err = "RPC.ChkProc, exception: %s" % (e)
             sys.stderr.writelines([err])
             found = None
-        return found, cmd, "", base64.b16encode(err)
+        return found, cmd, "", base64.b64encode(err)
 
 
     def PS(self):

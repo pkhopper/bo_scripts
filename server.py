@@ -78,6 +78,11 @@ def find_proc(args):
     params = params.strip().split(' ')
     server = servers.get(host[0], host[1])
     found, raw_cmd, stdoutmsg, stderrmsg = server.ChkProc(exe)
+    stdoutmsg = base64.b64decode(stdoutmsg)
+    stderrmsg = base64.b64decode(stderrmsg)
+    if VERB:
+        print(stderrmsg.decode("gbk"))
+        print(stdoutmsg.decode("gbk"))
     return found
 
 def start():
@@ -101,6 +106,21 @@ def stop():
     print("============ finish ============")
 
 
+def test():
+    cmd = [("127.0.0.1", 1238), "", "PING.EXE", "", "", 0]
+    for kk in START_SEQ:
+        print(kk)
+    for kk in KILL_SEQ:
+        print(kk)
+    print("============ test ============")
+    while True:
+        if not find_proc(cmd):
+            return
+        time.sleep(1)
+        print("pending proccess %s" % (cmd))
+    print("============ finish ============")
+
+
 if __name__ == "__main__":
     os.chdir(initserver.PATH_CURR)
     get_SEQ()
@@ -110,10 +130,7 @@ if __name__ == "__main__":
     elif sys.argv[1] == "stop":
         func = stop
     elif sys.argv[1] == "test":
-        for kk in START_SEQ:
-            print(kk)
-        for kk in KILL_SEQ:
-            print(kk)
+        func = test
     else:
         print("err")
 
