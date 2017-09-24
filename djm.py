@@ -40,7 +40,7 @@ class RPC:
         except Exception as e:
             err = "RPC.StartCmd, exception: %s" % (e)
             sys.stderr.writelines([err])
-            return "failed", cmdline.cmd, e.message, err
+            return "failed", cmdline.cmd, "", base64.b64encode(err)
 
     def ChkProc(self, cmd):
         cmd = util.regulate_win32_path(cmd)

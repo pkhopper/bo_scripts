@@ -8,6 +8,7 @@ import time
 import initserver
 import util
 import base64
+import chardet
 
 try:
     reload(sys).setdefaultencoding("utf-8")
@@ -26,6 +27,17 @@ BIN_SEQ = []
 
 START_SEQ = []
 KILL_SEQ = []
+
+
+def  set_1server(a, b, c):
+    return [
+               [("127.0.0.1", 1238), "", "ping", "", "www.baidu.com", 0]
+           ],\
+           []
+
+set_2server_type_1 = set_1server
+
+
 
 def get_SEQ():
     global START_SEQ
@@ -51,10 +63,10 @@ def execute_cmd(args):
     ret, raw_cmd, stdoutmsg, stderrmsg = server.StartCmd(exe, params, cwd)
     stdoutmsg = base64.b64decode(stdoutmsg)
     stderrmsg = base64.b64decode(stderrmsg)
-    if not VERB:
-        stdoutmsg = ""
-        stderrmsg = ""
-    print(host, ret, raw_cmd, stdoutmsg, stderrmsg, wait_sec)
+    print(host, ret, raw_cmd, wait_sec)
+    if VERB:
+        print(stderrmsg)
+        print(stdoutmsg)
     time.sleep(int(wait_sec))
     return ret == "ok"
 

@@ -124,6 +124,7 @@ class CommandLine(object):
         self.timeout = t
 
     def execute(self):
+        print(self.cmd)
         self.proc = subprocess.Popen(
             self.cmd,
             # shell=True,
