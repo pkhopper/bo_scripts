@@ -31,6 +31,8 @@ class RPC:
                 o1 += line
             for line in proc.stderr.readlines():
                 o2 += line
+            print(o1)
+            print(o2)
             o1 = base64.b64encode(o1)
             o2 = base64.b64encode(o2)
             if ret == 0:
@@ -40,9 +42,10 @@ class RPC:
         except Exception as e:
             err = "RPC.StartCmd, exception: %s" % (e)
             sys.stderr.writelines([err])
-            return "failed", cmdline.cmd, "", base64.b64encode(err)
+            return "Exception", cmdline.cmd, "", base64.b64encode(err)
 
     def ChkProc(self, cmd):
+        err = ""
         cmd = util.regulate_win32_path(cmd)
         print("ChkProc", cmd)
         try:
@@ -51,20 +54,19 @@ class RPC:
             err = "RPC.ChkProc, exception: %s" % (e)
             sys.stderr.writelines([err])
             found = None
-        o1, o2 = "*", "*"
-        return found, cmd, o1, o2
+        return found, cmd, "", base64.b16encode(err)
 
 
     def PS(self):
         print("ChkProc")
         try:
             ret = os.popen("ps x")
+            return ret, "ps", "", ""
         except Exception as e:
             err = "RPC.PS, exception: %s" % (e)
             sys.stderr.writelines([err])
             ret = "failed"
-        o1, o2 = "*", "*"
-        return ret, "ps", o1, o2
+            return ret, "ps", "exception", base64.b32encode(err)
 
 
 def serve_forever(local_ip="0.0.0.0", local_port=1238):
