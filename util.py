@@ -109,6 +109,16 @@ class CommandLine(object):
         self.cwd = cwd if cwd is not '' else None
         self.proc = None
         self.timeout = 10
+        self.out_log = []
+        self.err_log = []
+        # # for popen
+        # self.executable = None
+        # self.stdin = None
+        # self.stdout = None
+        # self.stderr = None
+        # self.close_fds = False
+        # self.shell = False
+        # self.cwd = None
 
     def set_timeout(self, t):
         self.timeout = t
@@ -119,18 +129,38 @@ class CommandLine(object):
             # shell=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            bufsize=0,
-            cwd=self.cwd
+            # bufsize=0,
+            cwd=self.cwd,
+            close_fds= not is_win32()
         )
         self.proc.wait()
-        if self.proc.returncode != 0:
-            raise Exception("[err] ret=%d, %s" % (self.proc.returncode, self.cmd))
-        return self.proc
+        return self.proc.returncode, self.proc
 
 
 def newProc(cwd, cmd, args):
     return CommandLine(cwd, cmd, args).execute()
 
+
+def get_proc_by_name(name):
+    try:
+        if is_win32():
+            p = os.popen('tasklist /FI "IMAGENAME eq %s"' % (name))
+            return p.read().count(name) > 0
+        for line in os.popen("ps xa"):
+            fields = line.split()
+            ps_name = fields[4]
+            if ps_name == name:
+                return True
+        return False
+    except:
+        pass
+    return False
+
+
+def regulate_win32_path(p):
+    if is_win32():
+        return p.replace('\\', '/')
+    return p
 
 
 def main():
