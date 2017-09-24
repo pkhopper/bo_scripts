@@ -7,6 +7,7 @@ import SimpleXMLRPCServer
 import xmlrpclib
 import util
 import base64
+import getopt
 
 try:
     reload(sys).setdefaultencoding("utf-8")
@@ -27,9 +28,9 @@ class RPC:
             ret, proc = cmdline.execute()
             o1, o2 = "", ""
             for line in proc.stdout.readlines():
-                o1 += line + '\n'
+                o1 += line
             for line in proc.stderr.readlines():
-                o2 += line + '\n'
+                o2 += line
             o1 = base64.b64encode(o1)
             o2 = base64.b64encode(o2)
             if ret == 0:
@@ -47,7 +48,8 @@ class RPC:
         try:
             found = util.get_proc_by_name(cmd)
         except Exception as e:
-            print e.message
+            err = "RPC.ChkProc, exception: %s" % (e)
+            sys.stderr.writelines([err])
             found = None
         o1, o2 = "*", "*"
         return found, cmd, o1, o2
@@ -55,11 +57,11 @@ class RPC:
 
     def PS(self):
         print("ChkProc")
-        ret = "ok"
         try:
             ret = os.popen("ps x")
         except Exception as e:
-            print e.message
+            err = "RPC.PS, exception: %s" % (e)
+            sys.stderr.writelines([err])
             ret = "failed"
         o1, o2 = "*", "*"
         return ret, "ps", o1, o2
@@ -68,7 +70,6 @@ class RPC:
 def serve_forever(local_ip="0.0.0.0", local_port=1238):
     server = SimpleXMLRPCServer.SimpleXMLRPCServer((local_ip, local_port))
     try:
-        print("start server ...")
         print("djm server listen at %s:%d" % (local_ip, local_port))
         rpc = RPC()
         server.register_instance(rpc)
@@ -92,11 +93,29 @@ class RemoteServers:
             return self.servers[url]
 
 
+def test(local_ip="0.0.0.0", local_port=1238):
+    servers = RemoteServers()
+    client = servers.get(local_ip, local_port)
+    while True:
+        cmd = raw_input()
+        rst = client.StartCmd(cmd, [], "")
+        rst[2] = base64.b64decode(rst[2])
+        print(rst[2])
+        client.PS()
+
+
+
 if __name__ == "__main__":
     ip = "0.0.0.0"
     port = 1238
-    if len(sys.argv) > 1:
-        ip = sys.argv[1]
-    if len(sys.argv) > 2:
-        port = sys.argv[2]
-    serve_forever(ip, port)
+    run = serve_forever
+    options, args = getopt.getopt(sys.argv[1:], "csp:i:", ["help", "ip=", "port="])
+    for name, value in options:
+        if name in ("-i"):
+            ip = value
+        elif name in ("-p"):
+            port = int(value)
+        elif name in ("-c"):
+            run = test
+    run(ip, port)
+
