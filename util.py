@@ -165,7 +165,25 @@ def regulate_win32_path(p):
 
 
 def main():
-    print(str(get_online_time()))
+    import re
+    ss = """
+    aaa
+    {
+       bbb = ccccc // asdfapozxn;l
+       
+       dddd = eee // asdfapozxn;l
+       
+       fff = kkkk
+    }
+    """
+    rss = r"^\s*([^(=^\{)]+)\s*=\s*([^($/\s)]+)"
+    rss = r"^\s*dddd\s*=\s*([^($/\s)]+)"
+    #reg = re.compile(r"^\s*([^(\{|\s)]+)\s*\{\s*([^(\}|/)]+)+\s\}", re.M|re.X)
+    reg = re.compile(rss, re.M)
+    kk = reg.findall(ss)
+
+    print(kk)
+    # print(str(get_online_time()))
 
 
 if __name__ == "__main__":
