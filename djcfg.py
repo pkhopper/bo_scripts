@@ -90,6 +90,12 @@ class DJConfig:
         self.all_[kv.line_] = "\t%s = %s" % (k, v)
         pass
 
+    def write_file(self, dest=None):
+        if dest is None:
+            dest = self.f_
+        with open(dest, "w") as f:
+            f.writelines(self.all_)
+
     def __str__(self):
         ss = ""
         for k, v in self.modes_.items():
