@@ -5,7 +5,8 @@ import os
 import sys
 import time
 import logging
-from multiprocessing.dummy import Pool, Queue
+import multiprocessing
+import queue
 
 pjoin, pabspath, pbasename = os.path.join, os.path.abspath, os.path.basename
 
@@ -27,13 +28,12 @@ def get_logger(logfile=None, level=logging.DEBUG):
     return logger
 
 def work(fpath, t, log):
-    return
     tt = os.path.getmtime(fpath)
     if tt > t:
         # os.utime(self.fpath, (self.t, self.t))
-        log.info("%s, %s", time.localtime(tt), fpath)
+        log.info("[%d] %s, %s", os.getpid(), time.localtime(tt), fpath)
     else:
-        log.debug("no, %d, %s", tt, fpath)
+        log.debug("[%d] no, %d, %s", os.getpid(), tt, fpath)
         # time.sleep(0.1)
 
 
@@ -41,8 +41,8 @@ def work(fpath, t, log):
 def main1():
     pp = sys.argv[1]
     log = get_logger(level=logging.DEBUG)
-    pool = Pool(10)
-    q = Queue()
+    pool = multiprocessing.Pool(10)
+    q = queue.Queue()
     i = 0
     total = 0
     try:
@@ -72,11 +72,13 @@ def main():
     t = time.time()
     total = 0
     print(time.localtime(t))
+    all = []
     for root, dirs, files in os.walk(pp, True):
         for f in files:
             fpath = pjoin(root, f)
-            work(fpath, t, log)
+            all.append(fpath)
             total += 1
+
     log.info("total=%d, t=%d", total, time.time() - t)
     print(time.localtime())
 
