@@ -5,6 +5,7 @@ import os
 import sys
 import time
 import logging
+from multiprocessing.dummy import Pool as ThreadPool
 import multiprocessing
 import queue
 
@@ -30,18 +31,17 @@ def get_logger(logfile=None, level=logging.DEBUG):
 def work(fpath, t, log):
     tt = os.path.getmtime(fpath)
     if tt > t:
-        # os.utime(self.fpath, (self.t, self.t))
+        os.utime(fpath, (t, t))
         log.info("[%d] %s, %s", os.getpid(), time.localtime(tt), fpath)
-    else:
-        log.debug("[%d] no, %d, %s", os.getpid(), tt, fpath)
-        # time.sleep(0.1)
+    # else:
+    #     log.debug("[%d] no, %d, %s", os.getpid(), tt, fpath)
 
 
 
 def main1():
     pp = sys.argv[1]
     log = get_logger(level=logging.DEBUG)
-    pool = multiprocessing.Pool(10)
+    pool = ThreadPool(10)
     q = queue.Queue()
     i = 0
     total = 0
@@ -51,7 +51,8 @@ def main1():
         for root, dirs, files in os.walk(pp, True):
             for f in files:
                 fpath = pjoin(root, f)
-                q.put(pool.apply_async(work, (fpath, t, log)))
+                # q.put(pool.apply_async(work, (fpath, t, log)))
+                pool.apply_async(work, (fpath, t, log))
                 total += 1
         log.info("total=%d, q=%d, t=%d", total, q.qsize(), time.time() - t)
         pool.close()
